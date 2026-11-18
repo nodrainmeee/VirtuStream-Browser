@@ -5,26 +5,50 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-dotnet@v4
         with: { dotnet-version: '8.0.x' }
+
       - name: Softcam x64 / x86
         shell: pwsh
         run: |
           git clone --depth 1 https://github.com/tshino/softcam.git
+          Write-Host "=== Structure du dépôt softcam ==="
+          Get-ChildItem softcam -Recurse -Depth 2 | ForEach-Object { $_.FullName.Replace((Get-Location).Path,'') }
+          $cm = Get-ChildItem softcam -Recurse -Filter CMakeLists.txt | Sort-Object { $_.FullName.Length } | Select-Object -First 1
+          if (-not $cm) { throw "Aucun CMakeLists.txt dans softcam : copiez-moi la structure affichée ci-dessus." }
+          $src = $cm.DirectoryName
+          Write-Host "CMakeLists trouvé dans : $src"
           foreach ($a in @('x64','Win32')) {
-            cmake -S softcam -B build_$a -A $a; cmake --build build_$a --config Release
+            cmake -S $src -B build_$a -A $a
+            if ($LASTEXITCODE -ne 0) { throw "cmake configure a échoué ($a)" }
+            cmake --build build_$a --config Release
+            if ($LASTEXITCODE -ne 0) { throw "cmake build a échoué ($a)" }
             $d = if ($a -eq 'x64') {'x64'} else {'x86'}
             New-Item -ItemType Directory -Force dist/softcam/$d | Out-Null
-            Get-ChildItem build_$a -Recurse -Filter softcam.dll | Select-Object -First 1 | Copy-Item -Destination dist/softcam/$d/
+            $dll = Get-ChildItem build_$a -Recurse -Filter softcam.dll | Select-Object -First 1
+            if (-not $dll) { throw "softcam.dll introuvable ($a)" }
+            Copy-Item $dll.FullName dist/softcam/$d/
           }
+
       - name: FFmpeg
         shell: pwsh
         run: |
           Invoke-WebRequest https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip -OutFile ff.zip
-          Expand-Archive ff.zip ffx; New-Item -ItemType Directory -Force dist/app/tools | Out-Null
+          Expand-Archive ff.zip ffx
+          New-Item -ItemType Directory -Force dist/app/tools | Out-Null
           Get-ChildItem ffx -Recurse -Include ffmpeg.exe,ffprobe.exe | Copy-Item -Destination dist/app/tools/
-      - run: choco install nsis -y
-      - run: dotnet publish src/VirtuStream.App/VirtuStream.App.csproj -c Release -o dist/app
-      - run: '& "C:\Program Files (x86)\NSIS\makensis.exe" installer\VirtuStream.nsi'
+
+      - name: NSIS
+        run: choco install nsis -y
+
+      - name: Compilation de l'application
+        run: dotnet publish src/VirtuStream.App/VirtuStream.App.csproj -c Release -o dist/app
+
+      - name: Installateur
+        run: '& "C:\Program Files (x86)\NSIS\makensis.exe" installer\VirtuStream.nsi'
+
       - uses: actions/upload-artifact@v4
-        with: { name: VirtuStream-Setup, path: dist/VirtuStream-Setup.exe }
+        with:
+          name: VirtuStream-Setup
+          path: dist/VirtuStream-Setup.exe
