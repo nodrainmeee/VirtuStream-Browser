@@ -1,0 +1,30 @@
+name: build-windows
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '8.0.x' }
+      - name: Softcam x64 / x86
+        shell: pwsh
+        run: |
+          git clone --depth 1 https://github.com/tshino/softcam.git
+          foreach ($a in @('x64','Win32')) {
+            cmake -S softcam -B build_$a -A $a; cmake --build build_$a --config Release
+            $d = if ($a -eq 'x64') {'x64'} else {'x86'}
+            New-Item -ItemType Directory -Force dist/softcam/$d | Out-Null
+            Get-ChildItem build_$a -Recurse -Filter softcam.dll | Select-Object -First 1 | Copy-Item -Destination dist/softcam/$d/
+          }
+      - name: FFmpeg
+        shell: pwsh
+        run: |
+          Invoke-WebRequest https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip -OutFile ff.zip
+          Expand-Archive ff.zip ffx; New-Item -ItemType Directory -Force dist/app/tools | Out-Null
+          Get-ChildItem ffx -Recurse -Include ffmpeg.exe,ffprobe.exe | Copy-Item -Destination dist/app/tools/
+      - run: choco install nsis -y
+      - run: dotnet publish src/VirtuStream.App/VirtuStream.App.csproj -c Release -o dist/app
+      - run: '& "C:\Program Files (x86)\NSIS\makensis.exe" installer\VirtuStream.nsi'
+      - uses: actions/upload-artifact@v4
+        with: { name: VirtuStream-Setup, path: dist/VirtuStream-Setup.exe }
