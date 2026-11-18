@@ -1,0 +1,16 @@
+<!doctype html><meta charset="utf-8"><title>Test caméra VirtuStream</title>
+<body style="font-family:Segoe UI;margin:20px">
+<h3>Test de réception caméra</h3>
+<button id="go">Lister et ouvrir la caméra</button> <select id="dev"></select> <select id="res"><option>1280x720</option><option>1920x1080</option></select>
+<p><video id="v" autoplay muted playsinline style="max-width:640px;background:#000"></video></p><pre id="o"></pre>
+<script>
+const o=document.getElementById('o'),sel=document.getElementById('dev');
+async function list(){await navigator.mediaDevices.getUserMedia({video:true}).then(s=>s.getTracks().forEach(t=>t.stop())).catch(e=>o.textContent=e);
+ const d=(await navigator.mediaDevices.enumerateDevices()).filter(x=>x.kind==='videoinput');sel.innerHTML=d.map(x=>`<option value="${x.deviceId}">${x.label}</option>`).join('');}
+document.getElementById('go').onclick=async()=>{await list();
+ const [w,h]=document.getElementById('res').value.split('x').map(Number);
+ const s=await navigator.mediaDevices.getUserMedia({video:{deviceId:{exact:sel.value},width:{exact:w},height:{exact:h},frameRate:{ideal:30}}});
+ const v=document.getElementById('v');v.srcObject=s;const t=s.getVideoTracks()[0];let n=0,t0=performance.now();
+ const tick=()=>{n++;v.requestVideoFrameCallback(tick)};v.requestVideoFrameCallback(tick);
+ setInterval(()=>{const st=t.getSettings();o.textContent=`${t.label}\nrésolution réelle : ${st.width}×${st.height}\nFPS déclarés : ${st.frameRate}\nFPS mesurés  : ${(n/((performance.now()-t0)/1000)).toFixed(1)}`;n=0;t0=performance.now()},2000);};
+</script>

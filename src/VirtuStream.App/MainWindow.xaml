@@ -1,0 +1,80 @@
+<Window x:Class="VirtuStream.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="VirtuStream Browser" Width="1280" Height="800" MinWidth="720" MinHeight="480"
+        Background="{DynamicResource ToolbarBg}" FontFamily="Segoe UI" FontSize="13">
+  <Grid>
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+
+    <Border Grid.Row="0" Background="{DynamicResource TabBarBg}" Padding="8,6,8,0">
+      <StackPanel Orientation="Horizontal">
+        <StackPanel x:Name="TabStrip" Orientation="Horizontal"/>
+        <Button Style="{StaticResource IconBtn}" Content="&#xE710;" Width="28" Height="28" Margin="4,0,0,4" Click="NewTab_Click" ToolTip="Nouvel onglet"/>
+      </StackPanel>
+    </Border>
+
+    <Border Grid.Row="1" Background="{DynamicResource ToolbarBg}" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1" Padding="8,4">
+      <Grid>
+        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <StackPanel Orientation="Horizontal">
+          <Button x:Name="BtnBack" Style="{StaticResource IconBtn}" Content="&#xE72B;" Click="Back_Click" ToolTip="Précédent"/>
+          <Button x:Name="BtnFwd" Style="{StaticResource IconBtn}" Content="&#xE72A;" Click="Fwd_Click" ToolTip="Suivant"/>
+          <Button Style="{StaticResource IconBtn}" Content="&#xE72C;" Click="Reload_Click" ToolTip="Actualiser"/>
+        </StackPanel>
+        <Border Grid.Column="1" Background="{DynamicResource OmniboxBg}" CornerRadius="16" Margin="8,0" Height="32">
+          <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <TextBox x:Name="Omnibox" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource Fg}"
+                     VerticalContentAlignment="Center" Padding="14,0" KeyDown="Omnibox_KeyDown" GotFocus="Omnibox_GotFocus"/>
+            <Button Grid.Column="1" Style="{StaticResource IconBtn}" Content="&#xE734;" Width="28" Height="28" Click="Bookmark_Click" ToolTip="Ajouter aux favoris"/>
+          </Grid>
+        </Border>
+        <StackPanel Grid.Column="2" Orientation="Horizontal">
+          <Button x:Name="BtnMedia" Style="{StaticResource IconBtn}" Content="&#xE714;" Click="ToggleMedia_Click" ToolTip="Panneau multimédia / caméra virtuelle"/>
+          <Button Style="{StaticResource IconBtn}" Content="&#xE712;" Click="Menu_Click" ToolTip="Menu"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <Grid Grid.Row="2">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+      <Grid x:Name="ViewHost" Background="{DynamicResource ToolbarBg}"/>
+      <Border x:Name="MediaPanel" Grid.Column="1" Width="310" Visibility="Collapsed" Background="{DynamicResource PanelBg}"
+              BorderBrush="{DynamicResource Line}" BorderThickness="1,0,0,0" Padding="14">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <StackPanel TextElement.Foreground="{DynamicResource Fg}">
+            <TextBlock Text="Lecteur et caméra virtuelle" FontSize="15" FontWeight="SemiBold"/>
+            <Border Background="Black" CornerRadius="8" Height="160" Margin="0,10,0,6"><Image x:Name="Preview" Stretch="Uniform"/></Border>
+            <TextBlock x:Name="FileLabel" Text="Aucune vidéo" Foreground="{DynamicResource FgMuted}" TextTrimming="CharacterEllipsis"/>
+            <Slider x:Name="Seek" Minimum="0" Maximum="1" Margin="0,8,0,0" PreviewMouseLeftButtonUp="Seek_Released" PreviewMouseLeftButtonDown="Seek_Pressed"/>
+            <TextBlock x:Name="TimeLabel" Text="00:00 / 00:00" Foreground="{DynamicResource FgMuted}" HorizontalAlignment="Right"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,6">
+              <Button Style="{StaticResource IconBtn}" Content="&#xE8B7;" Click="OpenFile_Click" ToolTip="Choisir une vidéo"/>
+              <Button x:Name="BtnPlay" Style="{StaticResource IconBtn}" Content="&#xE768;" Click="Play_Click" ToolTip="Lecture / Pause"/>
+              <Button Style="{StaticResource IconBtn}" Content="&#xE71A;" Click="Stop_Click" ToolTip="Stop"/>
+            </StackPanel>
+            <CheckBox x:Name="ChkLoop" Content="Lecture en boucle" IsChecked="True" Margin="0,4"/>
+            <CheckBox x:Name="ChkCam" Content="Caméra virtuelle Windows (niveau 2)" Margin="0,4" Click="Cam_Click"/>
+            <CheckBox x:Name="ChkMic" Content="Microphone virtuel (VB-Cable)" Margin="0,4" Click="Mic_Click"/>
+            <CheckBox x:Name="ChkL1" Content="Caméra interne au navigateur (niveau 1)" Margin="0,4" Click="L1_Click"/>
+            <TextBlock Text="Volume du micro virtuel" Margin="0,8,0,0" Foreground="{DynamicResource FgMuted}"/>
+            <Slider x:Name="Vol" Minimum="0" Maximum="1" Value="1" ValueChanged="Vol_Changed"/>
+            <ProgressBar x:Name="Level" Minimum="0" Maximum="1" Height="4" Margin="0,4"/>
+            <Grid Margin="0,8,0,0">
+              <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+              <ComboBox x:Name="CmbRes" SelectedIndex="0" Margin="0,0,4,0" SelectionChanged="Settings_Changed">
+                <ComboBoxItem Content="1280×720"/><ComboBoxItem Content="1920×1080"/>
+              </ComboBox>
+              <ComboBox x:Name="CmbFps" Grid.Column="1" SelectedIndex="1" Margin="4,0,0,0" SelectionChanged="Settings_Changed">
+                <ComboBoxItem Content="24 FPS"/><ComboBoxItem Content="30 FPS"/>
+              </ComboBox>
+            </Grid>
+            <CheckBox x:Name="ChkHw" Content="Décodage matériel si disponible" IsChecked="True" Margin="0,8" Click="Settings_Changed"/>
+            <TextBlock Text="Diagnostic (mesures réelles)" FontWeight="SemiBold" Margin="0,6,0,2"/>
+            <TextBlock x:Name="Stats" FontFamily="Consolas" FontSize="11.5" Foreground="{DynamicResource FgMuted}" TextWrapping="Wrap"/>
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+    </Grid>
+  </Grid>
+</Window>
