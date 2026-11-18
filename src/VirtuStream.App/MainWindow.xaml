@@ -1,50 +1,98 @@
 <Window x:Class="VirtuStream.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="VirtuStream Browser" Width="1280" Height="800" MinWidth="720" MinHeight="480"
-        Background="{DynamicResource ToolbarBg}" FontFamily="Segoe UI" FontSize="13">
-  <Grid>
-    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+        Title="VirtuStream" Width="1280" Height="800" MinWidth="760" MinHeight="480"
+        Background="{DynamicResource AppBg}" Foreground="{DynamicResource Fg}"
+        FontFamily="Segoe UI" FontSize="13" UseLayoutRounding="True">
+  <Grid x:Name="Root">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="40"/><RowDefinition Height="46"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
 
-    <Border Grid.Row="0" Background="{DynamicResource TabBarBg}" Padding="8,6,8,0">
-      <StackPanel Orientation="Horizontal">
+    <!-- Barre de titre + onglets -->
+    <Grid Grid.Row="0" Background="{DynamicResource AppBg}">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+      <Button x:Name="BtnSidebar" Style="{StaticResource IconBtn}" Content="&#xE700;" Margin="8,0,6,0" Click="SidebarToggle_Click" ToolTip="Barre latérale"/>
+      <StackPanel x:Name="TabArea" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
         <StackPanel x:Name="TabStrip" Orientation="Horizontal"/>
-        <Button Style="{StaticResource IconBtn}" Content="&#xE710;" Width="28" Height="28" Margin="4,0,0,4" Click="NewTab_Click" ToolTip="Nouvel onglet"/>
+        <Button x:Name="BtnNewTab" Style="{StaticResource IconBtn}" Content="&#xE710;" Width="30" Height="30" Margin="4,0,0,0" Click="NewTab_Click" ToolTip="Nouvel onglet (Ctrl+T)"/>
       </StackPanel>
-    </Border>
+      <StackPanel x:Name="Caption" Grid.Column="2" Orientation="Horizontal">
+        <Button Style="{StaticResource CaptionBtn}" Content="&#xE921;" Click="Min_Click"/>
+        <Button x:Name="BtnMax" Style="{StaticResource CaptionBtn}" Content="&#xE922;" Click="Max_Click"/>
+        <Button Style="{StaticResource CloseBtn}" Content="&#xE8BB;" Click="Close_Click"/>
+      </StackPanel>
+    </Grid>
 
-    <Border Grid.Row="1" Background="{DynamicResource ToolbarBg}" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1" Padding="8,4">
+    <!-- Barre d'outils -->
+    <Border Grid.Row="1" Background="{DynamicResource ToolbarBg}" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1" Padding="8,0">
       <Grid>
         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-        <StackPanel Orientation="Horizontal">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
           <Button x:Name="BtnBack" Style="{StaticResource IconBtn}" Content="&#xE72B;" Click="Back_Click" ToolTip="Précédent"/>
           <Button x:Name="BtnFwd" Style="{StaticResource IconBtn}" Content="&#xE72A;" Click="Fwd_Click" ToolTip="Suivant"/>
           <Button Style="{StaticResource IconBtn}" Content="&#xE72C;" Click="Reload_Click" ToolTip="Actualiser"/>
         </StackPanel>
-        <Border Grid.Column="1" Background="{DynamicResource OmniboxBg}" CornerRadius="16" Margin="8,0" Height="32">
+        <Border x:Name="OmniBorder" Grid.Column="1" Margin="8,5" CornerRadius="18" BorderThickness="2" Background="{DynamicResource OmniboxBg}">
+          <Border.Style>
+            <Style TargetType="Border">
+              <Setter Property="BorderBrush" Value="Transparent"/>
+              <Style.Triggers>
+                <Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter Property="BorderBrush" Value="{DynamicResource Accent}"/></Trigger>
+              </Style.Triggers>
+            </Style>
+          </Border.Style>
           <Grid>
-            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-            <TextBox x:Name="Omnibox" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource Fg}"
-                     VerticalContentAlignment="Center" Padding="14,0" KeyDown="Omnibox_KeyDown" GotFocus="Omnibox_GotFocus"/>
-            <Button Grid.Column="1" Style="{StaticResource IconBtn}" Content="&#xE734;" Width="28" Height="28" Click="Bookmark_Click" ToolTip="Ajouter aux favoris"/>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource FgMuted}" VerticalAlignment="Center" Margin="14,0,0,0"/>
+            <TextBox x:Name="Omnibox" Grid.Column="1" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource Fg}"
+                     CaretBrush="{DynamicResource Fg}" SelectionBrush="{DynamicResource Accent}" FontSize="13.5"
+                     VerticalContentAlignment="Center" Padding="8,0" KeyDown="Omnibox_KeyDown" GotKeyboardFocus="Omnibox_GotFocus"/>
+            <Button x:Name="BtnStar" Grid.Column="2" Style="{StaticResource IconBtn}" Content="&#xE734;" Width="30" Height="30" Margin="0,0,4,0" Click="Bookmark_Click" ToolTip="Ajouter aux favoris"/>
           </Grid>
         </Border>
-        <StackPanel Grid.Column="2" Orientation="Horizontal">
-          <Button x:Name="BtnMedia" Style="{StaticResource IconBtn}" Content="&#xE714;" Click="ToggleMedia_Click" ToolTip="Panneau multimédia / caméra virtuelle"/>
-          <Button Style="{StaticResource IconBtn}" Content="&#xE712;" Click="Menu_Click" ToolTip="Menu"/>
+        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+          <Button x:Name="BtnMedia" Style="{StaticResource IconBtn}" Content="&#xE714;" Click="ToggleMedia_Click" ToolTip="Lecteur et caméra virtuelle"/>
+          <Button x:Name="BtnMenu" Style="{StaticResource IconBtn}" Content="&#xE712;" Click="Menu_Click" ToolTip="Menu"/>
         </StackPanel>
       </Grid>
     </Border>
 
-    <Grid Grid.Row="2">
-      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-      <Grid x:Name="ViewHost" Background="{DynamicResource ToolbarBg}"/>
-      <Border x:Name="MediaPanel" Grid.Column="1" Width="310" Visibility="Collapsed" Background="{DynamicResource PanelBg}"
-              BorderBrush="{DynamicResource Line}" BorderThickness="1,0,0,0" Padding="14">
+    <!-- Barre de favoris -->
+    <Border x:Name="BookmarksBar" Grid.Row="2" Height="32" Visibility="Collapsed" Background="{DynamicResource ToolbarBg}"
+            BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1">
+      <DockPanel>
+        <Button DockPanel.Dock="Right" Style="{StaticResource MenuItemBtn}" Padding="8,3" Margin="0,0,8,0" Click="OtherBookmarks_Click">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" Margin="0,0,6,0" VerticalAlignment="Center"/>
+            <TextBlock Text="Tous les favoris" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Button>
+        <StackPanel x:Name="BookmarkItems" Orientation="Horizontal" Margin="8,0" VerticalAlignment="Center"/>
+      </DockPanel>
+    </Border>
+
+    <!-- Contenu -->
+    <Grid Grid.Row="3">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+
+      <DockPanel x:Name="Sidebar" Width="46" Background="{DynamicResource AppBg}">
+        <Button DockPanel.Dock="Bottom" Style="{StaticResource IconBtn}" Content="&#xE713;" Margin="0,0,0,8" Click="SideSettings_Click" ToolTip="Paramètres"/>
+        <StackPanel Margin="0,8,0,0">
+          <Button Style="{StaticResource IconBtn}" Content="&#xE734;" Margin="0,0,0,4" Click="SideStar_Click" ToolTip="Favoris"/>
+          <Button Style="{StaticResource IconBtn}" Content="&#xE81C;" Margin="0,0,0,4" Click="SideHistory_Click" ToolTip="Historique"/>
+          <Button Style="{StaticResource IconBtn}" Content="&#xE714;" Margin="0,0,0,4" Click="ToggleMedia_Click" ToolTip="Lecteur et caméra virtuelle"/>
+        </StackPanel>
+      </DockPanel>
+
+      <Grid x:Name="ViewHost" Grid.Column="1" Background="{DynamicResource ToolbarBg}"/>
+
+      <Border x:Name="MediaPanel" Grid.Column="2" Width="320" Visibility="Collapsed" Background="{DynamicResource PanelBg}"
+              BorderBrush="{DynamicResource Line}" BorderThickness="1,0,0,0" Padding="16">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-          <StackPanel TextElement.Foreground="{DynamicResource Fg}">
+          <StackPanel>
             <TextBlock Text="Lecteur et caméra virtuelle" FontSize="15" FontWeight="SemiBold"/>
-            <Border Background="Black" CornerRadius="8" Height="160" Margin="0,10,0,6"><Image x:Name="Preview" Stretch="Uniform"/></Border>
+            <Border Background="Black" CornerRadius="8" Height="160" Margin="0,12,0,8"><Image x:Name="Preview" Stretch="Uniform"/></Border>
             <TextBlock x:Name="FileLabel" Text="Aucune vidéo" Foreground="{DynamicResource FgMuted}" TextTrimming="CharacterEllipsis"/>
             <Slider x:Name="Seek" Minimum="0" Maximum="1" Margin="0,8,0,0" PreviewMouseLeftButtonUp="Seek_Released" PreviewMouseLeftButtonDown="Seek_Pressed"/>
             <TextBlock x:Name="TimeLabel" Text="00:00 / 00:00" Foreground="{DynamicResource FgMuted}" HorizontalAlignment="Right"/>
@@ -57,24 +105,29 @@
             <CheckBox x:Name="ChkCam" Content="Caméra virtuelle Windows (niveau 2)" Margin="0,4" Click="Cam_Click"/>
             <CheckBox x:Name="ChkMic" Content="Microphone virtuel (VB-Cable)" Margin="0,4" Click="Mic_Click"/>
             <CheckBox x:Name="ChkL1" Content="Caméra interne au navigateur (niveau 1)" Margin="0,4" Click="L1_Click"/>
-            <TextBlock Text="Volume du micro virtuel" Margin="0,8,0,0" Foreground="{DynamicResource FgMuted}"/>
+            <TextBlock Text="Volume du micro virtuel" Margin="0,10,0,0" Foreground="{DynamicResource FgMuted}"/>
             <Slider x:Name="Vol" Minimum="0" Maximum="1" Value="1" ValueChanged="Vol_Changed"/>
-            <ProgressBar x:Name="Level" Minimum="0" Maximum="1" Height="4" Margin="0,4"/>
-            <Grid Margin="0,8,0,0">
-              <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
-              <ComboBox x:Name="CmbRes" SelectedIndex="0" Margin="0,0,4,0" SelectionChanged="Settings_Changed">
-                <ComboBoxItem Content="1280×720"/><ComboBoxItem Content="1920×1080"/>
-              </ComboBox>
-              <ComboBox x:Name="CmbFps" Grid.Column="1" SelectedIndex="1" Margin="4,0,0,0" SelectionChanged="Settings_Changed">
-                <ComboBoxItem Content="24 FPS"/><ComboBoxItem Content="30 FPS"/>
-              </ComboBox>
-            </Grid>
-            <CheckBox x:Name="ChkHw" Content="Décodage matériel si disponible" IsChecked="True" Margin="0,8" Click="Settings_Changed"/>
-            <TextBlock Text="Diagnostic (mesures réelles)" FontWeight="SemiBold" Margin="0,6,0,2"/>
+            <ProgressBar x:Name="Level" Minimum="0" Maximum="1" Height="4" Margin="0,4" Foreground="{DynamicResource Accent}" Background="{DynamicResource Line}" BorderThickness="0"/>
+            <TextBlock Text="Résolution et cadence" Margin="0,10,0,6" Foreground="{DynamicResource FgMuted}"/>
+            <StackPanel Orientation="Horizontal">
+              <RadioButton x:Name="Res720" GroupName="res" Content="720p" IsChecked="True" Style="{StaticResource ChipRadio}" Margin="0,0,6,0" Click="Settings_Changed"/>
+              <RadioButton x:Name="Res1080" GroupName="res" Content="1080p" Style="{StaticResource ChipRadio}" Margin="0,0,16,0" Click="Settings_Changed"/>
+              <RadioButton x:Name="Fps24" GroupName="fps" Content="24 FPS" Style="{StaticResource ChipRadio}" Margin="0,0,6,0" Click="Settings_Changed"/>
+              <RadioButton x:Name="Fps30" GroupName="fps" Content="30 FPS" IsChecked="True" Style="{StaticResource ChipRadio}" Click="Settings_Changed"/>
+            </StackPanel>
+            <CheckBox x:Name="ChkHw" Content="Décodage matériel si disponible" IsChecked="True" Margin="0,12,0,4" Click="Settings_Changed"/>
+            <TextBlock Text="Diagnostic (mesures réelles)" FontWeight="SemiBold" Margin="0,10,0,2"/>
             <TextBlock x:Name="Stats" FontFamily="Consolas" FontSize="11.5" Foreground="{DynamicResource FgMuted}" TextWrapping="Wrap"/>
           </StackPanel>
         </ScrollViewer>
       </Border>
     </Grid>
+
+    <!-- Menu déroulant sobre (remplace le ContextMenu clair par défaut) -->
+    <Popup x:Name="MenuPopup" StaysOpen="False" AllowsTransparency="True" PopupAnimation="None">
+      <Border Margin="8" CornerRadius="8" Padding="6" MinWidth="260" Background="{DynamicResource ToolbarBg}" BorderBrush="{DynamicResource Line}" BorderThickness="1">
+        <ScrollViewer MaxHeight="440" VerticalScrollBarVisibility="Auto"><StackPanel x:Name="MenuItems"/></ScrollViewer>
+      </Border>
+    </Popup>
   </Grid>
 </Window>
